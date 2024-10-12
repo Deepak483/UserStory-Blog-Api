@@ -1,4 +1,5 @@
-import User from "../model/User.js";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const getAllUser = async (req, res) => {
@@ -18,7 +19,7 @@ const getAllUser = async (req, res) => {
 const signUp = async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    let existingUser = await User.find({ email });
+    let existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
         .status(400)
@@ -30,6 +31,7 @@ const signUp = async (req, res) => {
       name,
       email,
       password: hashPassword,
+      blogs:[]
     });
     await newUser.save();
     return res.status(201).json({ message: "User created successfully" });
@@ -55,8 +57,39 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Password is wrong" });
     }
+    //generate a jwt token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
     return res.status(200).json({ message: "Login Successfully", token });
-  } catch (error) {}
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Something went wrong :(", error: error.message });
+  }
 };
+// const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { name, email, password } = req.body;
+//     let user = await User.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     //update only when user is found
+//     user.name = name || user.name;
+//     user.email = email || user.email;
+//     if (password) {
+//       user.password = await bcrypt.hash(password, 10);
+//     }
 
-export default { getAllUser, signUp };
+//     //save the updated user
+//     await user.save();
+//     return res.status(200).json({ message: "Updated User Details", user });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ message: "Error updating user", error: error.message });
+//   }
+// };
+export default { getAllUser, signUp, login };

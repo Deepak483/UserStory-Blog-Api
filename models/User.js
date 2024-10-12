@@ -18,6 +18,13 @@ const userSchema = new Schema(
       required: [true, "Password is required"],
       minLength: [6, "Password must be atleast 6 characters long"],
     },
+    blogs: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Blog",
+        required: true,
+      },
+    ],
   },
   {
     timestamps: true,
